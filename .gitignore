@@ -1,0 +1,4 @@
+# Ignore .git directory
+.git/
+node_modules/
+sysdocs/

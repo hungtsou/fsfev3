@@ -3,27 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello World</title>
+    <title>WebSocket Chat</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
-        }
-        h1 {
-            color: #333;
             padding: 20px;
-            border-radius: 8px;
+        }
+        #chat-container {
+            width: 80%;
+            max-width: 600px;
             background-color: white;
+            border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        #messages {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        #message-form {
+            display: flex;
+            gap: 10px;
+        }
+        #message-input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .status {
+            margin-bottom: 10px;
+            color: #666;
         }
     </style>
 </head>
 <body>
-    <h1>{title}</h1>
+    <div id="chat-container">
+        <div class="status" id="connection-status">Connecting...</div>
+        <div id="messages"></div>
+        <form id="message-form">
+            <input type="text" id="message-input" placeholder="Type a message..." required>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <script>
+        // Determine WebSocket protocol based on current page protocol
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsHost = window.location.host;
+        const wsUrl = `${wsProtocol}//${wsHost}`;
+
+        const ws = new WebSocket(wsUrl);
+        const messagesDiv = document.getElementById('messages');
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+        const connectionStatus = document.getElementById('connection-status');
+
+        ws.onopen = () => {
+            connectionStatus.textContent = 'Connected';
+            connectionStatus.style.color = 'green';
+        };
+
+        ws.onclose = () => {
+            connectionStatus.textContent = 'Disconnected';
+            connectionStatus.style.color = 'red';
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            connectionStatus.textContent = 'Error connecting';
+            connectionStatus.style.color = 'red';
+        };
+
+        ws.onmessage = (event) => {
+            const message = document.createElement('div');
+            message.textContent = event.data;
+            messagesDiv.appendChild(message);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        };
+
+        messageForm.onsubmit = (e) => {
+            e.preventDefault();
+            const message = messageInput.value;
+            if (message) {
+                ws.send(message);
+                messageInput.value = '';
+            }
+        };
+    </script>
 </body>
 </html> 
